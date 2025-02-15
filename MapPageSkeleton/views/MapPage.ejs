@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map Page</title>
+
+  <!-- Bootstrap CSS for styling -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- TomTom Maps SDK -->
+  <link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps.css">
+  <script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps-web.min.js"></script>
+
+  <style>
+    /* Ensure full-screen map view */
+    body {
+      width: 100%;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    /* Style for the map container */
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    /* Styling for the fixed search/route input box */
+    .fixed-box {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 300px;
+      height: 350px;
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000; 
+    }
+
+    /* Styling for the dashboard button */
+    .dashboard-button {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000; 
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Map Container -->
+  <div id="map"></div>
+
+  <!-- Fixed Search/Route input box -->
+  <div class="fixed-box">
+    <!--Search and route tabs-->
+    <ul class="nav nav-tabs">
+      <!-- Search tab -->
+      <li class="nav-item">
+        <a class="nav-link active" id="searchTab" aria-current="page"  href="#">Search</a>
+      </li>
+      <!-- Route tab -->
+      <li class="nav-item">
+        <a class="nav-link" id="routeTab" href="#">Route</a>
+      </li>
+    </ul>
+    
+    <!--Container for the Search tab-->
+    <div class="tab-content">
+      <!-- Search tab content -->
+      <div class="tab-pane active" id="searchContent">
+        <form>
+          <div class="mt-4">
+            <input id="searchInput" type="text" class="form-control mb-3" placeholder="Search Location">
+          </div>
+        </form>
+      </div>
+
+      <!-- Route tab content -->
+      <div class="tab-pane" id="routeContent">
+        <form> 
+          <div class="mt-4">
+            <input id="startInput" type="text" class="form-control mb-3" placeholder="Starting Location">
+            <input id="endInput" type="text" class="form-control mb-3" placeholder="Destination">
+            <button id="SetRoute" class="btn btn-light">Set Route</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Dashboard Button -->
+  <button class="btn btn-light dashboard-button">User Dashboard</button>
+
+
+  <script>
+    // Initialize the TomTom Map
+    var map = tt.map({
+      key: "tzSGmwXqKngH3h0GDPBqeo88Pf9jYy4G", // Replace with your TomTom API Key
+      container: "map",
+      center: [-98.2300, 26.2034], // McAllen coordinates
+      zoom: 12
+    });
+
+    // Tab navigation, switching between Search and Route tabs
+    const tabs = document.querySelectorAll('.nav-link');
+    const tabContents = document.querySelectorAll('.tab-pane');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function (event){
+        event.preventDefault();
+
+        // Remove active class from all tabs and contents
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+
+        // Add active class to the clicked tab and its content
+        this.classList.add('active');
+
+        if (this.id === 'searchTab') {
+          document.getElementById('searchContent').classList.add('active');
+        } else if (this.id === 'routeTab') {
+          document.getElementById('routeContent').classList.add('active');
+        } 
+      });
+    });
+
+    // Event listener when the user presses "Enter"
+    document.getElementById('searchInput').addEventListener('keydown', function(event) {
+      const searchTab = document.getElementById('searchContent');
+      
+      // Only process when Enter is pressed and Search tab is active
+      if (event.key === "Enter" && searchTab.classList.contains('active')) {
+        event.preventDefault();
+
+        let searchQuery = document.getElementById('searchInput').value;
+
+        // Send search query to the server
+        fetch('/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ search: searchQuery })
+        })
+        .then(response => response.json())
+        .then(data => console.log('Server Response:', data))
+        .catch(error => console.error('Error:', error));
+      }
+    });
+
+    // Fetching Start and End inputs when the "Set Route" button is clicked
+    document.getElementById("SetRoute").addEventListener("click", function(event) {
+      event.preventDefault();
+
+      let startLocation = document.getElementById('startInput').value;
+      let endLocation = document.getElementById('endInput').value;
+
+      // Send start and end location to the server
+      fetch('/route', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ start: startLocation, end: endLocation })
+      })
+      .then(response => response.json())
+      .then(data => console.log('Server Response:', data))
+      .catch(error => console.error('Error:', error));
+    });
+
+  </script>
+
+  <!-- Link to the server-side JavaScript file -->
+  <script src="server.js"></script>
+
+</body>
+</html>
+
