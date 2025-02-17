@@ -28,10 +28,10 @@
           </nav> 
         <div class="login-container">
             <h2>Login</h2>
-            <form>
+            <form action="{% url 'map' %}" method="get">
                 <input type="text" placeholder="Username">
                 <input type="password" placeholder="Password">
-                <a href="{% url 'dashboard' %}"><button type="submit">Login</button></a>
+                <button type="submit">Login</button></a>
             </form>
             <div class="divider">or login with</div>
             <div class="social-login">
